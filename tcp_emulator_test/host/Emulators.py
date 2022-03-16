@@ -1,7 +1,6 @@
 from utils import Log
 from utils import Db
 from const import Val
-from deal import creator, decoder, encoder, checker
 import socket
 import threading
 import queue

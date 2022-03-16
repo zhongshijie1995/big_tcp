@@ -1,6 +1,4 @@
-# tcp_trans_go
-
-多交互场景下TCP报文交互自动化测试框架
+# tcp_emulator_test
 
 ## 目录
   * [项目概况](##项目概况)
@@ -221,3 +219,79 @@ def abc_xml(x: str, y: str, chk_set: str) -> str:
 -  ```./_db/create.sql```，建表脚本：用于创建项目项目所需的所有表。
 -  ```./_db/data.sql```，数据脚本：用于插入demo目标系统的测试案例。
 -  ```./demo_target.py```，运行脚本：用于运行demo目标系统。
+
+
+# tcp_proxy
+纯Python完成的TCP转发代理，Nginx进行TCP端口转发不便于篡改报文内容，本项目提供可篡改报文内容的TCP转发代理。
+
+## 运行说明
+0. 安装Python
+1. 编辑`info.py`中的配置内容
+2. 运行`sh run.sh`，运行日志文件为`tcp_proxy.log`
+
+
+## 定制说明
+> 通过修改`_conf.py`完成定制，以下为样例代码
+
+1. 直接转发
+  ```python
+  # 代理最大连接数
+  MAX_PROXY = 200
+  # 代理服务器
+  PROXY_HOST = '0.0.0.0'
+  PROXY_PORT = 20001
+  # 目标服务器
+  DEST_HOST = '192.168.0.101'
+  DEST_PORT = 20001
+  
+  
+  def deal_msg(msg: bytes) -> bytes:
+      """
+      代理服务器处理TCP文本定制函数
+  
+      :param msg:
+      :return:
+      """
+      return msg
+   ```
+2. 篡改TCP报文内文本XML节点的文本为指定值：
+  ```python
+  import re
+  
+  
+  # 代理最大连接数
+  MAX_PROXY = 200
+  # 代理服务器
+  PROXY_HOST = '0.0.0.0'
+  PROXY_PORT = 20001
+  # 目标服务器
+  DEST_HOST = '192.168.0.101'
+  DEST_PORT = 20001
+  
+  
+  def deal_msg(msg: bytes) -> bytes:
+      """
+      代理服务器处理TCP文本定制函数
+  
+      :param msg:
+      :return:
+      """
+      # 报文头长度和编码
+      head_len = 4
+      encoding = 'utf-8'
+      # 分离报文头和报文体，解码报文体
+      msg_head = msg[:head_len]
+      msg_body = msg[head_len:].decode(encoding)
+      # 替换指定xml标签内的文本
+      acc_date = '20210531'
+      tag_list = [
+          r'(?<=<v_date>).+?(?=</v_date>)',
+          r'(?<=<value_date>).+?(?=</value_date>)',
+      ]
+      for tag in tag_list:
+          msg_body = re.sub(tag, acc_date, msg_body)
+      # 编码报文体
+      msg_body = msg_body.encode(encoding)
+      # 拼接报文头和报文体
+      return msg_head + msg_body
+  ```
